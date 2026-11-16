@@ -1,0 +1,7 @@
+data/
+public_test_data/
+submission.csv
+__pycache__/
+.ipynb_checkpoints/
+.venv/
+.DS_Store
