@@ -1,6 +1,6 @@
 # Satellite Image Classification with a CNN (EuroSAT)
 
-A convolutional neural network, written and trained from scratch in PyTorch (no pretrained weights), that classifies 64×64 satellite images into 10 land-use classes. The repo also contains a small web app to try the model on your own images.
+A convolutional neural network, trained from scratch in PyTorch (no pretrained weights). It classifies 64×64 satellite images into 10 different classes. The repo also contains a small web app to try the model the model in deployment.
 
 | | |
 |---|---|
@@ -13,15 +13,14 @@ The model was also the most compact and fastest to deploy among about 500 submis
 
 ## Task
 
-Land-use classification on a 10,000-image subset of EuroSat (Sentinel-2 satellite images, 64×64 RGB), provided for the course *Programming in Python II* at JKU Linz. The ten classes are `AnnualCrop`, `Forest`, `HerbaceousVegetation`, `Highway`, `Industrial`, `Pasture`, `PermanentCrop`, `Residential`, `River` and `SeaLake`.
+Classification on a 10,000-image subset of EuroSat (Satellite images, 64×64 RGB), provided for the course *Programming in Python II* at JKU Linz. The ten classes are `AnnualCrop`, `Forest`, `HerbaceousVegetation`, `Highway`, `Industrial`, `Pasture`, `PermanentCrop`, `Residential`, `River` and `SeaLake`.
 
 ![Random samples](docs/random_samples.svg)
 
 ## Preprocessing
-- Split: 90/10, stratified by class, fixed seed, so results are reproducible.
-- Normalization: per-channel mean and standard deviation computed on the training split only, to avoid leakage into validation and test.
-- Augmentation: random flips and rotation, training set only. Satellite images have no fixed orientation, so these are label-preserving.
-- Consistency: validation, test and the web app use the same deterministic transform (resize, tensor conversion, normalization).
+- Split: 90/10, stratified by class Fixed seed for reproducibility.
+- Normalization: per-channel mean and standard deviation were computed on the training set only, to avoid data leakage into the test set.
+- Augmentation: random flips and rotation, applied only to the training set. Since Satellite images have no fixed orientation, preserve the labels.
 - EDA: pixel and brightness distributions per class were checked before training. Color -and brightness transformations of images would cause a distortion of important features.
 
 ## Model
@@ -35,6 +34,24 @@ Linear(512→256) → ReLU → Dropout(0.5) → Linear(256→10)
 ```
 
 The definition is in [`model.py`](model.py).
+
+## Design decisions
+
+**3×3 convolutions with padding 1.** Small kernels stacked on top of each other see a large area with few weights (two 3×3 layers cover the same area as one 5×5 layer, with fewer parameters). Padding keeps the image size unchanged, so only the pooling layers change it and I control the resolution myself.
+
+**Batch normalization + ReLU after every convolution.** Batch norm keeps the activations stable, which makes training faster and less sensitive to the learning rate. ReLU adds the non-linearity.
+
+**Why pooling.** Each max-pool halves the resolution (64 → 32 → 16 → 8). That cuts computation and memory, makes the features slightly tolerant to small shifts, and lets deeper layers see larger parts of the image, from edges and colours in the first stage to larger structures such as fields, roads or buildings in the last.
+
+**Why two 64-channel layers at the start.** The first stage works on the full 64×64 resolution, where fine details like edges, textures and colour transitions live. Two layers there extract more low-level features before the image is downsampled. 64 filters is a common starting width for RGB input, and I kept powers of two throughout.
+
+**Why the channels double (64 → 128 → 256 → 512).** Each pooling step halves the height and width, so the number of channels increases to keep the capacity per stage up. Deeper features are more abstract and more varied, and they need more channels to describe them.
+
+**Why global average pooling instead of flatten.** After the last convolution the feature map is 8×8×512. Flattening it would give a 32,768-dimensional vector, and the first linear layer alone would need about 8.4 million weights. Averaging each channel gives a 512-dimensional vector and only about 131,000 weights, 64 times fewer. This keeps the whole model at about 1.7 million parameters, lowers the risk of overfitting and makes it easy to deploy.
+
+**Dropout 0.5 in the classifier head.** A regularizer for the fully connected part, which is where overfitting is most likely.
+
+**Design evolution.** An earlier variant with three convolution blocks plateaued at about 93% validation accuracy. The final architecture is deeper and uses global average pooling, together with data augmentation and a learning-rate schedule (halved every 15 epochs), and reaches 97.6%.
 
 ## Training
 
