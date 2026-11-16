@@ -18,11 +18,11 @@ Land-use classification on a 10,000-image subset of EuroSat (Sentinel-2 satellit
 ![Random samples](docs/random_samples.svg)
 
 ## Preprocessing
-Split: 90/10, stratified by class, fixed seed, so results are reproducible.
-Normalization: per-channel mean and standard deviation computed on the training split only, to avoid leakage into validation and test.
-Augmentation: random flips and rotation, training set only. Satellite images have no fixed orientation, so these are label-preserving.
-Consistency: validation, test and the web app use the same deterministic transform (resize, tensor conversion, normalization).
-EDA: pixel and brightness distributions per class were checked before training. Color transformations of images would cause a loss of important features.
+- Split: 90/10, stratified by class, fixed seed, so results are reproducible.
+- Normalization: per-channel mean and standard deviation computed on the training split only, to avoid leakage into validation and test.
+- Augmentation: random flips and rotation, training set only. Satellite images have no fixed orientation, so these are label-preserving.
+- Consistency: validation, test and the web app use the same deterministic transform (resize, tensor conversion, normalization).
+- EDA: pixel and brightness distributions per class were checked before training. Color transformations of images would cause a loss of important features.
 
 ## Model
 
