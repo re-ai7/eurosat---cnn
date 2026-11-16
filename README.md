@@ -41,13 +41,13 @@ The definition is in [`model.py`](model.py).
 
 **Batch normalization + ReLU after every convolution.** Batch norm keeps the activations stable, which makes training faster and less sensitive to the learning rate. ReLU adds the non-linearity.
 
-**Why pooling.** Each max-pool halves the resolution (64 → 32 → 16 → 8). That cuts computation and memory, makes the features slightly tolerant to small shifts, and lets deeper layers see larger parts of the image, from edges and colours in the first stage to larger structures such as fields, roads or buildings in the last.
+**Pooling.** Each max-pool halves the resolution (64 → 32 → 16 → 8). That cuts computation and memory, makes the features slightly tolerant to small shifts, and lets deeper layers see larger parts of the image, from edges and colours in the first stage to larger structures such as fields, roads or buildings in the last.
 
-**Why two 64-channel layers at the start.** The first stage works on the full 64×64 resolution, where fine details like edges, textures and colour transitions live. Two layers there extract more low-level features before the image is downsampled. 64 filters is a common starting width for RGB input, and I kept powers of two throughout.
+**Starting 64-channel layers.** The first stage works on the full 64×64 resolution, where fine details like edges, textures and colour transitions live. Two layers there extract more low-level features before the image is downsampled. 64 filters is a common starting width for RGB input, and I kept powers of two throughout.
 
-**Why the channels double (64 → 128 → 256 → 512).** Each pooling step halves the height and width, so the number of channels increases to keep the capacity per stage up. Deeper features are more abstract and more varied, and they need more channels to describe them.
+**Channels doubling (64 → 128 → 256 → 512).** Each pooling step halves the height and width, so the number of channels increases to keep the capacity per stage up. Deeper features are more abstract and more varied, and they need more channels to describe them.
 
-**Why global average pooling instead of flatten.** After the last convolution the feature map is 8×8×512. Flattening it would give a 32,768-dimensional vector, and the first linear layer alone would need about 8.4 million weights. Averaging each channel gives a 512-dimensional vector and only about 131,000 weights, 64 times fewer. This keeps the whole model at about 1.7 million parameters, lowers the risk of overfitting and makes it easy to deploy.
+**Global average pooling vs. flatten.** After the last convolution the feature map is 8×8×512. Flattening it would give a 32,768-dimensional vector, and the first linear layer alone would need about 8.4 million weights. Averaging each channel gives a 512-dimensional vector and only about 131,000 weights, 64 times fewer. This keeps the whole model at about 1.7 million parameters, lowers the risk of overfitting and makes it easy to deploy.
 
 **Dropout 0.5 in the classifier head.** A regularizer for the fully connected part, which is where overfitting is most likely.
 
