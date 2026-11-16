@@ -41,8 +41,6 @@ The definition is in [`model.py`](model.py).
 - Loss and optimizer: cross-entropy, Adam with learning rate 1e-3
 - Learning-rate schedule: `StepLR`, halved every 15 epochs
 - Batch size 64, 120 epochs, the checkpoint with the best validation accuracy is kept
-- Augmentation: random horizontal and vertical flips, random rotation up to 90°
-- Input normalization: per-channel mean and standard deviation, computed on the training split only to avoid data leakage
 
 ![Training curves](docs/model_performance.svg)
 
