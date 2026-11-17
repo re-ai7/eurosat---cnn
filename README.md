@@ -46,7 +46,7 @@ Linear(512→256) → ReLU → Dropout(0.5) → Linear(256→10)
 
 **Global average pooling vs. flatten.** After the last convolution the feature map is 8×8×512. Flattening it would give a 32,768-dimensional vector, and the first linear layer alone would need about 8.4 million weights (from older tested model versions). Averaging each channel gives a 512-dimensional vector and only about 131,000 weights, 64 times fewer. This keeps the whole model at about 1.7 million parameters, lowers the risk of overfitting and makes it easy to deploy.
 
-**Dropout 0.5 in the classifier head.** A regularizer for the fully connected part, which is where overfitting is most likely.
+**Dropout 0.5 in the classifier head.** Half of the neurons in the hidden layer are randomly switched off in every step during training. So the network cannot rely on single neurons. This regularizes the linear layer which is prone to overfitting. More robust features are learned.
 
 **Design evolution.** An earlier variant with three convolution blocks plateaued at about 93% validation accuracy. The final architecture is deeper and uses global average pooling, together with data augmentation and a learning-rate schedule (halved every 15 epochs), and reaches 97.6%.
 
