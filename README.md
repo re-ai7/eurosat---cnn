@@ -1,6 +1,6 @@
 # Satellite Image Classification with a CNN (EuroSAT)
 
-A convolutional neural network, trained from scratch in PyTorch (no pretrained weights). It classifies 64×64 satellite images into 10 different classes. The repo also contains a small web app to try the model the model in deployment.
+For my first university project I have trained a convolutional neural network from scratch, to classifies 64×64 satellite images into 10 different classes. The repo also contains a small web app which puts the model into deployment.
 
 | | |
 |---|---|
@@ -9,7 +9,7 @@ A convolutional neural network, trained from scratch in PyTorch (no pretrained w
 | **Parameters** | about 1.7 M (6.9 MB weights file) |
 | **Data** | 10,000 images, 90/10 stratified train/validation split, seed 42 |
 
-The model was also the most compact and fastest to deploy among about 500 submissions in the course challenge.
+The model was also the most accurate with respect to compactness and to deployment speed among 500 submissions in the university course challenge.
 
 ## Task
 
@@ -18,36 +18,33 @@ Classification on a 10,000-image subset of EuroSat (Satellite images, 64×64 RGB
 ![Random samples](docs/random_samples.svg)
 
 ## Preprocessing
-- Split: 90/10, stratified by class Fixed seed for reproducibility.
-- Normalization: per-channel mean and standard deviation were computed on the training set only, to avoid data leakage into the test set.
-- Augmentation: random flips and rotation, applied only to the training set. Since Satellite images have no fixed orientation, preserve the labels.
-- EDA: pixel and brightness distributions per class were checked before training. Color -and brightness transformations of images would cause a distortion of important features.
+- Split: The 90/10 train, test split was stratified to maintain label distributions. Fixed seed for reproducibility.
+- Normalization: per-channel mean and standard deviation were computed on the training set only. This is especially important to avoid data leakage into the test set.
+- Augmentation: random flips and rotations were only applied on the training set. These operations are label preserving, since satellite images have no fixed orientation.
+- EDA: I checked pixel and brightness distributions per class before training. Figured out: Color -and brightness transformations of images would cause a distortion of important features.
 
 ## Model
 
-Five convolutional layers, each followed by batch normalization and ReLU, with three max-pooling steps, global average pooling and a small classifier head:
+Five convolutional layers, each followed by batch normalization and ReLU as non-linearity. Inbetween three max-pooling steps. Global average pooling was applied before the linear classifier head in order to reduce the number of weights..
 
 ```
 Conv(3→64) → Conv(64→64) → MaxPool → Conv(64→128) → MaxPool →
 Conv(128→256) → MaxPool → Conv(256→512) → GlobalAvgPool →
 Linear(512→256) → ReLU → Dropout(0.5) → Linear(256→10)
 ```
-
-The definition is in [`model.py`](model.py).
-
 ## Design decisions
 
-**3×3 convolutions with padding 1.** Small kernels stacked on top of each other see a large area with few weights (two 3×3 layers cover the same area as one 5×5 layer, with fewer parameters). Padding keeps the image size unchanged, so only the pooling layers change it and I control the resolution myself.
+**3×3 convolutions with padding 1.** Small kernels run on top of each other see a large area with few weights (two 3×3 layers cover the same area as one 5×5 layer, with fewer parameters). If the kernels are chosen too small (2x2,1x1), they will struggle to capture any texture over multiple pixels. Padding keeps the image size unchanged by the kernels.
 
-**Batch normalization + ReLU after every convolution.** Batch norm keeps the activations stable, which makes training faster and less sensitive to the learning rate. ReLU adds the non-linearity.
+**Batch normalization + ReLU after every convolution.** ReLU adds the non-linearity.
 
-**Pooling.** Each max-pool halves the resolution (64 → 32 → 16 → 8). That cuts computation and memory, makes the features slightly tolerant to small shifts, and lets deeper layers see larger parts of the image, from edges and colours in the first stage to larger structures such as fields, roads or buildings in the last.
+**Pooling.** Each max-pool halves the resolution by choosing only the maximum value of a 2x2 grid moved over every feature map. For my network this means: less computation due to fewer parameter, reduced memorization (overfitting) and highlighted important features such as edges.
 
-**Starting 64-channel layers.** The first stage works on the full 64×64 resolution, where fine details like edges, textures and colour transitions live. Two layers there extract more low-level features before the image is downsampled. 64 filters is a common starting width for RGB input, and I kept powers of two throughout.
+**Starting 64-channel layers.** The first block is applied to the full 64×64 resolution. The two layers there extract more low-level features like edges and color transitions, before the image is downsampled and information is lost.
 
 **Channels doubling (64 → 128 → 256 → 512).** Each pooling step halves the height and width, so the number of channels increases to keep the capacity per stage up. Deeper features are more abstract and more varied, and they need more channels to describe them.
 
-**Global average pooling vs. flatten.** After the last convolution the feature map is 8×8×512. Flattening it would give a 32,768-dimensional vector, and the first linear layer alone would need about 8.4 million weights. Averaging each channel gives a 512-dimensional vector and only about 131,000 weights, 64 times fewer. This keeps the whole model at about 1.7 million parameters, lowers the risk of overfitting and makes it easy to deploy.
+**Global average pooling vs. flatten.** After the last convolution the feature map is 8×8×512. Flattening it would give a 32,768-dimensional vector, and the first linear layer alone would need about 8.4 million weights (from older tested model versions). Averaging each channel gives a 512-dimensional vector and only about 131,000 weights, 64 times fewer. This keeps the whole model at about 1.7 million parameters, lowers the risk of overfitting and makes it easy to deploy.
 
 **Dropout 0.5 in the classifier head.** A regularizer for the fully connected part, which is where overfitting is most likely.
 
