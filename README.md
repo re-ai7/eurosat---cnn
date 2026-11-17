@@ -18,7 +18,7 @@ Classification on a 10,000-image subset of EuroSat (Satellite images, 64×64 RGB
 ![Random samples](docs/random_samples.svg)
 
 ## Preprocessing
-- Split: The 90/10 train, test split was stratified to maintain label distributions. Fixed seed for reproducibility.
+- Split: The 90/10 train, validation split was stratified to maintain label distributions. Fixed seed for reproducibility.
 - Normalization: per-channel mean and standard deviation were computed on the training set only. This is especially important to avoid data leakage into the test set.
 - Augmentation: random flips and rotations were only applied on the training set. These operations are label preserving, since satellite images have no fixed orientation.
 - EDA: I checked pixel and brightness distributions per class before training. Figured out: Color -and brightness transformations of images would cause a distortion of important features.
