@@ -36,7 +36,7 @@ Linear(512→256) → ReLU → Dropout(0.5) → Linear(256→10)
 
 **3×3 convolutions with padding 1.** Small kernels run on top of each other see a large area with few weights (two 3×3 layers cover the same area as one 5×5 layer, with fewer parameters). If the kernels are chosen too small (2x2,1x1), they will struggle to capture any texture over multiple pixels. Padding keeps the image size unchanged by the kernels.
 
-**Batch normalization + ReLU after every convolution.** ReLU adds the non-linearity.
+**Batch normalization + ReLU after every convolution.** Batch normalization not only allows a faster learning rate by to stabilizing distributions between layers but also acts as a form of regularization.  ReLU then adds the necessary non-linearity.
 
 **Pooling.** Each max-pool halves the resolution by choosing only the maximum value of a 2x2 grid moved over every feature map. For my network this means: less computation due to fewer parameter, reduced memorization (overfitting) and highlighted important features such as edges.
 
