@@ -53,7 +53,7 @@ Linear(512→256) → ReLU → Dropout(0.5) → Linear(256→10)
 ## Training
 
 - Loss and optimizer: cross-entropy, Adam with learning rate 1e-3
-- Learning-rate schedule: `StepLR`, halved every 15 epochs
+- Learning-rate schedule: StepLR, halved every 15 epochs
 - Batch size 64, 120 epochs, the checkpoint with the best validation accuracy is kept
 
 ![Training curves](docs/model_performance.svg)
@@ -62,11 +62,10 @@ Linear(512→256) → ReLU → Dropout(0.5) → Linear(256→10)
 
 ![Confusion matrix](docs/confusion_matrix.svg)
 
-Examples of validation images the model got wrong:
+Validation images the model misclassified:
 
 ![Misclassified samples](docs/misclassified_samples.svg)
 
-Further data exploration (pixel value distribution, brightness per class) is in the notebook.
 
 ## Repository
 
